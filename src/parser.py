@@ -4,7 +4,7 @@ import string
 def getContent(document):
     content = ''
 
-    pn = re.search('PN\s(\d)+', document).group().split()[1]
+    rn = re.search('RN\s(\d)+', document).group().split()[1]
 
     au = re.search('AU\s((.)*\n)*TI', document)
     if au:
@@ -48,4 +48,35 @@ def getContent(document):
     
     content = content.lower()
     content = re.sub('['+string.punctuation+']', '', content)
-    return pn, content
+    return rn, content
+
+def adjustRelevance(relevances):
+    for index, relevance in enumerate(relevances):
+        value = 0
+        while relevance > 0:
+            value += relevance % 10
+            relevance /= 10
+        relevances[index] = int(value)
+    return relevances
+
+def getQuery(query):
+    content = query
+
+    query = re.search('QU\s((.)*\n)*NR', content).group()[3:-3]
+    query = re.sub('\n', '', query)
+    query = re.sub('( )+', ' ', query)
+    query = query.lower()
+    query = re.sub('['+string.punctuation+']', '', query)
+
+    relevants = re.search('RD\s((.)*\n)*', content).group()[3:-3]
+    relevants = re.sub('\n', '', relevants)
+    relevants = re.sub('( )+', ' ', relevants)
+    relevants = relevants.split()
+    relevants = [ int(x) for x in relevants ]
+    relevants = list(zip(relevants[::2],adjustRelevance(relevants[1::2])))
+
+    #for index in range(0,range(len(relevants)),2):
+    #    print(index)
+
+    return query, sorted(relevants, key = lambda x: x[1], reverse = True)
+    #return query, relevants
