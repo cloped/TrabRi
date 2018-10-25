@@ -1,12 +1,10 @@
 import re
 import string 
 
-cfs = ['cf74']
-
 def getContent(document):
     content = ''
 
-    pn = int(re.search('PN\s(\d)+', document).group().split()[1])
+    pn = re.search('PN\s(\d)+', document).group().split()[1]
 
     au = re.search('AU\s((.)*\n)*TI', document)
     if au:
@@ -51,24 +49,3 @@ def getContent(document):
     content = content.lower()
     content = re.sub('['+string.punctuation+']', '', content)
     return pn, content
-
-invertedIndex = {}
-
-for cfc in cfs:
-    with open('../data/cfc/' + cfc, 'r') as cf:
-        data = cf.read()
-        data = data.split('\nPN')
-        data = [data[0]] + ['PN' + x for x in data[1:]]
-
-    for document in data:
-        paperNumber, content = getContent(document)
-
-        for word in content.split():
-            if word not in invertedIndex.keys():
-                invertedIndex[word] = {}
-                invertedIndex[word][paperNumber] = 1
-            else:
-                if paperNumber not in invertedIndex[word].keys():
-                    invertedIndex[word][paperNumber] = 1
-                else:
-                    invertedIndex[word][paperNumber] += 1
